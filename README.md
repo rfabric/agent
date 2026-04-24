@@ -1,6 +1,6 @@
 # rfabric-agent
 
-The Rust process that runs on every [rFabric](https://rfabric.io)-managed robot. Bridges the device to the rFabric platform.
+The Rust process that runs on every [rFabric](https://rfabric.io)-managed robot. Bridges the device to the rFabric platform over AWS IoT Core (telemetry & commands), Amazon S3 (bulk data), and LiveKit (interactive media — planned).
 
 - Single static binary, no runtime dependencies
 - linux / macOS on amd64 + arm64
