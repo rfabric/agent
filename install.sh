@@ -136,7 +136,7 @@ main() {
     log "verifying installation"
     "${RFABRIC_AGENT_INSTALL_DIR}/rfabric-agent" version || err "installed binary failed to run"
 
-    log "done — next: 'rfabric-agent provision --token …' (see https://github.com/${RFABRIC_AGENT_REPO})"
+    log "done — next: 'rfabric-agent provision <token>' (see https://github.com/${RFABRIC_AGENT_REPO})"
 }
 
 main "$@"

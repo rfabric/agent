@@ -31,22 +31,31 @@ Pre-release builds are available on the `rfabric/rc` channel on Cloudsmith.
 
 ## Quick start
 
+### Dev laptop / Homebrew — no sudo, no manual config copy
+
 ```bash
-# 1. On the robot, mint a device certificate from a one-time bootstrap token
-sudo rfabric-agent provision \
-    --api-url https://api.rfabric.io \
-    --token   prov_…              \
-    --out-dir /etc/rfabric
+rfabric-agent provision prov_…
+export RFABRIC_AGENT_SERVICE_TOKEN=...
+rfabric-agent run
+```
 
-# 2. Drop your operator-owned config alongside it
-sudo cp /etc/rfabric/agent.example.toml /etc/rfabric/agent.toml
+`provision` writes the cert / key / CA triple, `provisioned.toml`, and a freshly generated `agent.toml` into `~/.config/rfabric/` (override with `--out-dir`). The agent picks the same directory up automatically on the next `run`. Re-running `provision` refreshes the certificate but leaves an existing `agent.toml` untouched, so operator edits survive.
+
+The bootstrap token can also be supplied via `RFABRIC_AGENT_PROVISIONING_TOKEN` to keep it out of shell history. The API endpoint is baked in at build time from the release channel (`stable` → prod, otherwise → dev); pass `--api-url https://api.<env>.rfabric.io` only when targeting a non-default environment.
+
+### Production robot (apt / yum) — systemd-managed
+
+```bash
+sudo rfabric-agent provision prov_… --out-dir /etc/rfabric
+
 sudo $EDITOR /etc/rfabric/agent.env       # set RFABRIC_AGENT_SERVICE_TOKEN
-
-# 3. Smoke test, then start the service
-sudo -u rfabric rfabric-agent --config /etc/rfabric/agent.toml doctor
 sudo systemctl enable --now rfabric-agent
 sudo journalctl -u rfabric-agent -f
 ```
+
+The systemd unit pins `RFABRIC_AGENT_CONFIG=/etc/rfabric/agent.toml`, so the service always reads the operator-owned config regardless of the per-user default.
+
+If you forget `--out-dir` while running under `sudo`, `provision` prints a warning and falls back to `/root/.config/rfabric/` — a path the systemd unit does **not** read. Always pass `--out-dir /etc/rfabric` for the system install (or re-run without sudo for the per-user install).
 
 `rfabric-agent --help` and `rfabric-agent <subcommand> --help` document every flag. `rfabric-agent version --output json` reports build channel, commit, and host triple — the same shape as `rfabric version --output json`.
 
