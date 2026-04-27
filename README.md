@@ -35,11 +35,12 @@ Pre-release builds are available on the `rfabric/rc` channel on Cloudsmith.
 
 ```bash
 rfabric-agent provision prov_…
-export RFABRIC_AGENT_SERVICE_TOKEN=...
 rfabric-agent run
 ```
 
 `provision` writes the cert / key / CA triple, `provisioned.toml`, and a freshly generated `agent.toml` into `~/.config/rfabric/` (override with `--out-dir`). The agent picks the same directory up automatically on the next `run`. Re-running `provision` refreshes the certificate but leaves an existing `agent.toml` untouched, so operator edits survive.
+
+There is no shared service token to copy: the agent authenticates to the rFabric API by exchanging its X.509 client certificate for a short-lived `type=robot` JWT against the mTLS robot-auth endpoint baked in at build time (override with `--robot-auth-url` on `provision` for staging / on-prem).
 
 The bootstrap token can also be supplied via `RFABRIC_AGENT_PROVISIONING_TOKEN` to keep it out of shell history. The API endpoint is baked in at build time from the release channel (`stable` → prod, otherwise → dev); pass `--api-url https://api.<env>.rfabric.io` only when targeting a non-default environment.
 
@@ -48,7 +49,6 @@ The bootstrap token can also be supplied via `RFABRIC_AGENT_PROVISIONING_TOKEN` 
 ```bash
 sudo rfabric-agent provision prov_… --out-dir /etc/rfabric
 
-sudo $EDITOR /etc/rfabric/agent.env       # set RFABRIC_AGENT_SERVICE_TOKEN
 sudo systemctl enable --now rfabric-agent
 sudo journalctl -u rfabric-agent -f
 ```
