@@ -14,6 +14,7 @@
 #   RFABRIC_AGENT_VERSION      Specific version (e.g. v1.4.0). Default: latest stable.
 #   RFABRIC_AGENT_CHANNEL      "stable" (default) or "rc" — selects a channel when no version is pinned.
 #   RFABRIC_AGENT_INSTALL_DIR  Directory to install into. Default: /usr/local/bin.
+#   RFABRIC_AGENT_SYSTEMD      When set to 1 on Linux, register and start the systemd unit.
 
 set -eu
 
@@ -38,7 +39,7 @@ detect_os() {
     case "$(uname -s)" in
         Linux)  echo linux ;;
         Darwin) echo darwin ;;
-        *)      err "unsupported OS: $(uname -s) — see https://github.com/${RFABRIC_AGENT_REPO}/releases for manual install" ;;
+        *)      err "unsupported OS: $(uname -s) — supported: linux/*, darwin/* (bench only). See https://github.com/${RFABRIC_AGENT_REPO}#compatibility" ;;
     esac
 }
 
@@ -46,7 +47,7 @@ detect_arch() {
     case "$(uname -m)" in
         x86_64|amd64)   echo amd64 ;;
         arm64|aarch64)  echo arm64 ;;
-        *)              err "unsupported architecture: $(uname -m)" ;;
+        *)              err "unsupported architecture: $(uname -m) — supported: amd64, arm64. See https://github.com/${RFABRIC_AGENT_REPO}#compatibility" ;;
     esac
 }
 
@@ -131,9 +132,21 @@ main() {
     log "extracting"
     tar -xzf "${tmp}/${archive}" -C "${tmp}"
 
-    install_to_dir "${tmp}/rfabric-agent"
+install_to_dir "${tmp}/rfabric-agent"
 
-    log "verifying installation"
+if [ "${RFABRIC_AGENT_SYSTEMD:-0}" = "1" ] && [ "$(detect_os)" = "linux" ] && command -v systemctl >/dev/null 2>&1; then
+    log "installing systemd unit (requires root for /lib/systemd/system)"
+    unit_src="${tmp}/rfabric-agent.service"
+    if [ -f "${unit_src}" ]; then
+        ${install_cmd} install -m 0644 "${unit_src}" /lib/systemd/system/rfabric-agent.service
+    else
+        log "systemd unit not bundled in archive — install the .deb/.rpm package for supervised service"
+    fi
+    ${install_cmd} systemctl daemon-reload || true
+    ${install_cmd} systemctl enable --now rfabric-agent.service || log "enable/start skipped — run provision first if the service fails"
+fi
+
+log "verifying installation"
     "${RFABRIC_AGENT_INSTALL_DIR}/rfabric-agent" version || err "installed binary failed to run"
 
     log "done — next: 'rfabric-agent provision <token>' (see https://github.com/${RFABRIC_AGENT_REPO})"

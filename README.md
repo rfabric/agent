@@ -29,6 +29,15 @@ The `.deb` / `.rpm` packages install the binary to `/usr/bin/rfabric-agent`, dro
 
 Pre-release builds are available on the `rfabric/rc` channel on Cloudsmith.
 
+## Compatibility
+
+| Platform | Arch | Tier |
+| --- | --- | --- |
+| Linux | amd64, arm64 | production |
+| macOS | amd64, arm64 | developer bench only |
+
+Unsupported OS/arch combinations fail fast from `install.sh` with a pointer to this matrix. Query installed variant and capabilities with `rfabric-agent version --output json`.
+
 ## Quick start
 
 ### Dev laptop / Homebrew — no sudo, no manual config copy
