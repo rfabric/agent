@@ -10,24 +10,21 @@ The Rust process that runs on every [rFabric](https://rfabric.io)-managed robot.
 ## Install
 
 ```bash
-# Debian / Ubuntu (apt) — recommended for production robots
-curl -1sLf https://dl.cloudsmith.io/public/rfabric/release/setup.deb.sh | sudo -E bash
-sudo apt install rfabric-agent
+# Linux / macOS - on Debian/Ubuntu (apt) and Fedora/RHEL (dnf) installs the rfabric-agent package
+curl -fsSL https://get.rfabric.io/agent.sh | sh
 
-# RHEL / Fedora (yum / dnf)
-curl -1sLf https://dl.cloudsmith.io/public/rfabric/release/setup.rpm.sh | sudo -E bash
-sudo dnf install rfabric-agent
-
-# macOS / Linux (Homebrew) — dev laptops, custom images
+# macOS / Linux (Homebrew) - dev laptops, custom images
 brew install rfabric/tap/rfabric-agent
 
-# Any POSIX (curl) — bare-metal installs, CI runners
-curl -fsSL https://raw.githubusercontent.com/rfabric/agent/main/install.sh | sh
+# Binary only (no package, no systemd service) - bare-metal installs, CI runners
+curl -fsSL https://get.rfabric.io/agent.sh | RFABRIC_INSTALL_DIR=/usr/local/bin sh
 ```
 
-The `.deb` / `.rpm` packages install the binary to `/usr/bin/rfabric-agent`, drop the systemd unit at `/lib/systemd/system/rfabric-agent.service`, create the `rfabric` system user, and ship `/etc/rfabric/agent.example.toml` as a starting point. Homebrew and `install.sh` only place the binary on `PATH` — operators wanting a managed service should use the OS package.
+On Linux with `apt-get` or `dnf`, `agent.sh` adds the rFabric package repository <https://linux.rfabric.io> (using `sudo` when not root) and installs the `rfabric-agent` package: the binary at `/usr/bin/rfabric-agent`, the systemd unit at `/lib/systemd/system/rfabric-agent.service`, the `rfabric` system user, and `/etc/rfabric/agent.example.toml` as a starting point. On macOS and other Linux systems, or with `RFABRIC_VERSION` / `RFABRIC_INSTALL_DIR` set, it installs the checksum-verified binary from the GitHub Release into `RFABRIC_INSTALL_DIR` (default `/usr/local/bin`). Homebrew and the binary-only install only place the binary on `PATH` - operators wanting a managed service use the package.
 
-Pre-release builds are available on the `rfabric/rc` channel on Cloudsmith.
+Upgrade with `sudo apt-get upgrade` / `sudo dnf upgrade`. `rfabric-remote` (agent with interactive media) installs from the same repository: `sudo apt-get install rfabric-remote` / `sudo dnf install rfabric-remote`.
+
+Release candidates: `curl -fsSL https://get.rfabric.io/agent.sh | RFABRIC_CHANNEL=rc sh`. On apt/dnf systems this switches the package repository to the `rc` channel; rerunning `agent.sh` without `RFABRIC_CHANNEL` switches back to `stable`.
 
 ## Quick start
 
@@ -44,7 +41,7 @@ There is no shared service token to copy: the agent authenticates to the rFabric
 
 The bootstrap token can also be supplied via `RFABRIC_AGENT_PROVISIONING_TOKEN` to keep it out of shell history. The API endpoint is baked in at build time from the release channel (`stable` → prod, otherwise → dev); pass `--api-url https://api.<env>.rfabric.io` only when targeting a non-default environment.
 
-### Production robot (apt / yum) — systemd-managed
+### Production robot (apt / dnf) — systemd-managed
 
 ```bash
 sudo rfabric-agent provision prov_… --out-dir /etc/rfabric
