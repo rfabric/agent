@@ -17,6 +17,7 @@ The first run downloads the newest agent release and its runtime, checks both SH
 | Command | Does |
 | --- | --- |
 | `rfabric agent` | Interactive session in the current directory |
+| `rfabric agent --with-shell` | Interactive session that can also run shell commands for you; every command asks first |
 | `rfabric agent --print "<prompt>"` | One prompt without the interactive UI; changes are refused |
 | `rfabric agent --continue` | Continue the last session of the current CLI profile |
 | `rfabric agent --resume [<id>]` | Resume a session of the current CLI profile |
@@ -28,12 +29,20 @@ The CLI's `--profile`, `--api-url` and `--auth-url` apply: each CLI profile has 
 
 ## What the agent can do
 
+Without `--with-shell`:
+
 - Reach rFabric only through the MCP tools `search_operations`, `describe_operation` and `call_operation`, as the user who approved it.
 - Read and change files only inside the directory you started it in.
 - Move file bytes only to and from the upload and download URLs rFabric issued in the same session.
-- Run no shell commands and hold no CLI credentials. Lines you type with `!` are your own commands.
+- Run no shell commands. Lines you type with `!` are your own commands.
 
 Every operation that changes something asks you first, showing the operation, its parameters and body. `--print` sessions refuse changes.
+
+With `--with-shell` the agent can do the whole task for you: build and push images, upload and download in bulk, run the `rfabric` CLI, your cloud CLIs and git.
+
+- Every command is shown in full and runs only after you approve it with `y`; there is no "allow for this session".
+- An approved command runs as you, in your own environment: your signed-in `rfabric` CLI, Docker logins, cloud credentials and SSH keys. It can reach whatever you can, so read each command before you approve it.
+- The agent itself still holds no CLI credentials, and its sessions and sign-ins stay separate from yours.
 
 ## Updates
 
